@@ -6,7 +6,7 @@ using UnityEditor;
 #endif
 
 [ExecuteAlways]
-public class FurShellRenderer : MonoBehaviour
+public class DajiShellInstancedRenderer : MonoBehaviour
 {
     [Header("Mesh Source")]
     public MeshRenderer sourceRenderer;
@@ -41,24 +41,21 @@ public class FurShellRenderer : MonoBehaviour
 
     [Range(0.0f, 1f)]
     public float furShading = 0.25f;
-
-    [Header("Fur Lighting")]
-    [Range(0f, 5f)]
-    public float furDirLightExposure = 1f;
-
-    [Tooltip("Controls how much the directional light penetrates through the fur shell. ")]
-    [Range(-0.5f, 0.5f)]
-    public float lightFilter = 0.1f;
+    [Header("Fur Ambient Occlusion")]
+    public Color occlusionColor = new Color(0.15f, 0.12f, 0.10f, 1f);
 
     [Range(0f, 5f)]
     public float fresnelLV = 1f;
 
-    [Header("Fur Ambient Occlusion")]
-    public Color occlusionColor = new Color(0.15f, 0.12f, 0.10f, 1f);
-
     [Header("Force Settings")]
     public Vector3 forceGlobal = Vector3.zero;
     public Vector3 forceLocal = Vector3.zero;
+
+    [Header("Rim Lighting")]
+    public Color rimColor = Color.black;
+
+    [Range(0.0f, 8.0f)]
+    public float rimPower = 6.0f;
 
     [Header("Render Settings")]
     public int surfaceRenderQueue = (int)RenderQueue.Geometry;
@@ -82,14 +79,14 @@ public class FurShellRenderer : MonoBehaviour
     private static readonly int FurDensityId = Shader.PropertyToID("_FurDensity");
     private static readonly int FurThinnessId = Shader.PropertyToID("_FurThinness");
     private static readonly int FurShadingId = Shader.PropertyToID("_FurShading");
-    private static readonly int FurDirLightExposureId = Shader.PropertyToID("_FurDirLightExposure");
-    private static readonly int LightFilterId = Shader.PropertyToID("_LightFilter");
     private static readonly int ColorId = Shader.PropertyToID("_Color");
     private static readonly int SpecularId = Shader.PropertyToID("_Specular");
     private static readonly int ShininessId = Shader.PropertyToID("_Shininess");
     private static readonly int OcclusionStrengthId = Shader.PropertyToID("_OcclusionStrength");
     private static readonly int ForceGlobalId = Shader.PropertyToID("_ForceGlobal");
     private static readonly int ForceLocalId = Shader.PropertyToID("_ForceLocal");
+    private static readonly int RimColorId = Shader.PropertyToID("_RimColor");
+    private static readonly int RimPowerId = Shader.PropertyToID("_RimPower");
     private static readonly int OcclusionColorId = Shader.PropertyToID("_OcclusionColor");
     private static readonly int FresnelLVId = Shader.PropertyToID("_FresnelLV");
 
@@ -118,9 +115,7 @@ public class FurShellRenderer : MonoBehaviour
         shininess = Mathf.Max(0.01f, shininess);
         furThinness = Mathf.Max(0.01f, furThinness);
         furShading = Mathf.Clamp01(furShading);
-        furDirLightExposure = Mathf.Clamp(furDirLightExposure, 0f, 5f);
-        lightFilter = Mathf.Clamp(lightFilter, -0.5f, 0.5f);
-        fresnelLV = Mathf.Clamp(fresnelLV, 0f, 5f);
+        rimPower = Mathf.Clamp(rimPower, 0.0f, 8.0f);
 
         EnsureRuntimeData();
 
@@ -234,13 +229,13 @@ public class FurShellRenderer : MonoBehaviour
         SetMaterialFloatIfExists(mat, FurDensityId, furDensity);
         SetMaterialFloatIfExists(mat, FurThinnessId, furThinness);
         SetMaterialFloatIfExists(mat, FurShadingId, furShading);
-        SetMaterialFloatIfExists(mat, FurDirLightExposureId, furDirLightExposure);
-        SetMaterialFloatIfExists(mat, LightFilterId, lightFilter);
         SetMaterialColorIfExists(mat, ColorId, color);
         SetMaterialColorIfExists(mat, SpecularId, specular);
         SetMaterialFloatIfExists(mat, ShininessId, shininess);
         SetMaterialVectorIfExists(mat, ForceGlobalId, forceGlobal);
         SetMaterialVectorIfExists(mat, ForceLocalId, forceLocal);
+        SetMaterialColorIfExists(mat, RimColorId, rimColor);
+        SetMaterialFloatIfExists(mat, RimPowerId, rimPower);
         SetMaterialColorIfExists(mat, OcclusionColorId, occlusionColor);
         SetMaterialFloatIfExists(mat, FresnelLVId, fresnelLV);
 
@@ -318,13 +313,13 @@ public class FurShellRenderer : MonoBehaviour
         block.SetFloat(FurDensityId, furDensity);
         block.SetFloat(FurThinnessId, furThinness);
         block.SetFloat(FurShadingId, furShading);
-        block.SetFloat(FurDirLightExposureId, furDirLightExposure);
-        block.SetFloat(LightFilterId, lightFilter);
         block.SetColor(ColorId, color);
         block.SetColor(SpecularId, specular);
         block.SetFloat(ShininessId, shininess);
         block.SetVector(ForceGlobalId, forceGlobal);
         block.SetVector(ForceLocalId, forceLocal);
+        block.SetColor(RimColorId, rimColor);
+        block.SetFloat(RimPowerId, rimPower);
         block.SetColor(OcclusionColorId, occlusionColor);
         block.SetFloat(FresnelLVId, fresnelLV);
     }

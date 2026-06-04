@@ -7,8 +7,8 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: FurBaseInstanceMixedNoise
-  m_Shader: {fileID: 4800000, guid: 29730cf0778c2e346b125cddbc51410a, type: 3}
+  m_Name: DajiShell
+  m_Shader: {fileID: 4800000, guid: a8bd617e542755042833eaf4622eca90, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -106,7 +106,7 @@ Material:
     - _FurLength: 0.17
     - _FurShading: 0.13
     - _FurStep: 0
-    - _FurThinness: 1.87
+    - _FurThinness: 4.19
     - _GlossMapScale: 0
     - _Glossiness: 0
     - _GlossyReflections: 0
@@ -129,9 +129,9 @@ Material:
     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
-    - _ForceGlobal: {r: 0, g: -0.29, b: 0, a: 0}
+    - _ForceGlobal: {r: 0, g: 0, b: 0, a: 0}
     - _ForceLocal: {r: 0, g: 0, b: 0, a: 0}
-    - _OcclusionColor: {r: 0.4867924, g: 0.4867924, b: 0.4867924, a: 1}
+    - _OcclusionColor: {r: 0.4862745, g: 0.4862745, b: 0.4862745, a: 1}
     - _RimColor: {r: 0.34117648, g: 0.31764707, b: 0.29803923, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
     - _Specular: {r: 0.47058824, g: 0.37254903, b: 0.29411766, a: 1}

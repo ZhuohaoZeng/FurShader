@@ -145,7 +145,7 @@ Shader "Custom/FurShaderBaseInstance0604"
                 half3 diffuse = mainLight.color * albedo * saturate(dot(normalWS, lightWS));
                 half3 specular = mainLight.color * _Specular.rgb * pow(saturate(dot(normalWS, halfWS)), _Shininess);
 
-                half3 color = ambient ;//+ diffuse + specular
+                half3 color = ambient + diffuse + specular;//
                 half3 noiseCombine = SAMPLE_TEXTURE2D(_FurTex, sampler_FurTex, i.uv.zw * _FurThinness).rgb;
                 half mixedNoise =  noiseCombine.g * 0.9 + noiseCombine.b * 0.8;
                 half alpha = saturate(mixedNoise - (i.furStep * i.furStep) * _FurDensity);

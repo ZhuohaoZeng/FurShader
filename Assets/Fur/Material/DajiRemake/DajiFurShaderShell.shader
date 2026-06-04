@@ -1,4 +1,4 @@
-Shader "Custom/FurShaderBaseInstance"
+Shader "Daji/DajiFurShaderShell"
 {
     Properties
     {
@@ -7,24 +7,28 @@ Shader "Custom/FurShaderBaseInstance"
 
         _Specular("Specular", Color) = (0, 0, 0, 1)
         _Shininess("Shininess", Range(0.01, 128.0)) = 8.0
-        _FurDirLightExposure ("Fur Direct Light Exposure", Range(0, 5)) = 1
-        _LightFilter("Light Filter",  Range(-0.5,0.5)) = 0.1
-        _FresnelLV ("Fresnel Level", Range(0, 5)) = 1
 
         [NoScaleOffset] _OcclusionMap ("AO Map", 2D) = "white" {}
-        //_OcclusionStrength ("AO Strength", Range(0, 1)) = 1
+        _OcclusionStrength ("AO Strength", Range(0, 1)) = 1
         _OcclusionColor ("AO Color", Color) = (0, 0, 0, 1)
+        _FresnelLV ("Fresnel Level", Range(0, 5)) = 1
         
+        _FurTex("Fur Pattern", 2D) = "white" {}
+        //_FurStep("FURSTEP", Range(0.0, 1)) = 0
         
-        _FurTex("Fur Pattern", 2D) = "white" {}        
         _FurLength("Fur Length", Range(0.0, 1)) = 0.5
         _FurDensity("Fur Density", Range(0, 2)) = 0.57
         _FurThinness ("Fur Thinness", Range(0.01, 10)) = 5
         _FurShading ("Fur Shading", Range(0.0, 1)) = 0.302
+
+        _UVOffset ("Layer UV Offset", Vector) = (0.37, -0.41, 0, 0) 
+        _UVOffsetStrength ("UV Offset Strength", Range(0, 1)) = 0.1
         
         _ForceGlobal ("Force Global", Vector) = (0, 0, 0, 0)
         _ForceLocal ("Force Local", Vector) = (0, 0, 0, 0)
 
+        _RimColor ("Rim Color", Color) = (0, 0, 0, 1)
+        _RimPower ("Rim Power", Range(0.0, 8.0)) = 6.0
     }
     SubShader
     {
@@ -57,9 +61,6 @@ Shader "Custom/FurShaderBaseInstance"
                 float4 _Color;
                 float4 _MainTex_ST;
                 float4 _Specular;
-                float _FurDirLightExposure;
-                float _LightFilter;
-
                 float _Shininess;
                 float _OcclusionStrength;
                 float4 _OcclusionColor;
@@ -73,9 +74,14 @@ Shader "Custom/FurShaderBaseInstance"
                 float _FurThinness;
                 float _FurShading;
 
+                float4 _UVOffset;
+                float _UVOffsetStrength;
+
                 float4 _ForceGlobal;
                 float4 _ForceLocal;
 
+                float4 _RimColor;
+                float _RimPower;
             CBUFFER_END
 
             struct VertexData 
@@ -107,9 +113,17 @@ Shader "Custom/FurShaderBaseInstance"
                 VertexPositionInputs posInputs = GetVertexPositionInputs(furPositionOS);
                 VertexNormalInputs normInputs = GetVertexNormalInputs(v.normalOS, v.tangentOS);
                 
+                //Recalculating UVs with offset for shell layers
+                float2 baseUV = TRANSFORM_TEX(v.uv, _MainTex);
+                float2 offsetUV = _UVOffset.xy * furStep * _UVOffsetStrength *0.1;
+                float safeThinness = max(_FurThinness, 0.001);
+                
+                
                 i.posCS = posInputs.positionCS;
-                i.uv.xy = TRANSFORM_TEX(v.uv, _MainTex);
-                i.uv.zw = TRANSFORM_TEX(v.uv, _FurTex);
+                
+                i.uv.xy = baseUV + offsetUV / safeThinness;
+                i.uv.zw = baseUV * safeThinness + offsetUV;
+                
                 i.normalWS = normInputs.normalWS;
                 i.normalVS = normalize(TransformWorldToViewDir(i.normalWS));
                 i.posWS = posInputs.positionWS;
@@ -128,6 +142,9 @@ Shader "Custom/FurShaderBaseInstance"
                 half3 halfWS = normalize(viewWS + lightWS);
                 
                 half3 albedo = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, i.uv.xy).rgb * _Color.rgb;
+                // albedo -= (pow(1 - i.furStep, 3)) * _FurShading;
+                // float rim = 1.0 - saturate(dot(viewWS, normalWS));
+                // albedo += half4(_RimColor.rgb * pow(rim, _RimPower), 1.0);
 
                 // half rawAO = SAMPLE_TEXTURE2D(_OcclusionMap, sampler_OcclusionMap, i.uv.xy).r;
                 // half ao = lerp(1.0, rawAO, _OcclusionStrength);
@@ -137,23 +154,13 @@ Shader "Custom/FurShaderBaseInstance"
                 half occlusion = i.furStep * i.furStep + 0.04;
                 occlusion = saturate(occlusion);
                 half3 SHL = lerp(_OcclusionColor.rgb * SH, SH, occlusion);
-                // Adding Rim Light to enhance silhouette
-                half fresnel = 1 - max(0, dot(normalWS, viewWS));
-                half rimLight = fresnel * occlusion;
-                rimLight *= rimLight * _FresnelLV * SH;
-                SHL += rimLight;
 
-                //direct lights
-                half3 lightDir = normalize(mainLight.direction);
-                half NoL = dot(lightDir, normalWS);
-                half wrappedNdotL = saturate(NoL * 0.5 + 0.5);
-                half3 dirLight = mainLight.color * wrappedNdotL * _FurDirLightExposure;
-                //half3 ambient = SHL * albedo;
-                //half3 diffuse = mainLight.color * albedo * saturate(dot(normalWS, lightWS));
+                half3 ambient = SHL * albedo;
+                half3 diffuse = mainLight.color * albedo * saturate(dot(normalWS, lightWS));
                 half3 specular = mainLight.color * _Specular.rgb * pow(saturate(dot(normalWS, halfWS)), _Shininess);
-                
-                half3 color = (SHL + dirLight) * albedo + specular;//
-                half3 noiseCombine = SAMPLE_TEXTURE2D(_FurTex, sampler_FurTex, i.uv.zw * _FurThinness).rgb;
+
+                half3 color = ambient + diffuse + specular;//
+                half3 noiseCombine = SAMPLE_TEXTURE2D(_FurTex, sampler_FurTex, i.uv.zw).rgb;
                 half mixedNoise =  noiseCombine.g * 0.9 + noiseCombine.b * 0.8;
                 half alpha = saturate(mixedNoise - (i.furStep * i.furStep) * _FurDensity);
                 return half4(color, alpha);  
