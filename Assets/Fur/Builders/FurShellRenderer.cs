@@ -47,11 +47,30 @@ public class FurShellRenderer : MonoBehaviour
     public float furDirLightExposure = 1f;
 
     [Tooltip("Controls how much the directional light penetrates through the fur shell. ")]
-    [Range(-0.5f, 0.5f)]
+    [Range(-1.0f, 1.0f)]
     public float lightFilter = 0.1f;
 
     [Range(0f, 5f)]
     public float fresnelLV = 1f;
+
+    [Header("Fur Kajiya-Kay Specular")]
+    public Color strandSpecColor1 = Color.white;
+    public Color strandSpecColor2 = new Color(1f, 0.85f, 0.65f, 1f);
+
+    [Range(1f, 256f)]
+    public float strandSpecPower1 = 64f;
+
+    [Range(1f, 256f)]
+    public float strandSpecPower2 = 32f;
+
+    [Range(-1f, 1f)]
+    public float specShift1 = 0.1f;
+
+    [Range(-1f, 1f)]
+    public float specShift2 = -0.2f;
+
+    [Range(0f, 5f)]
+    public float strandSpecStrength = 1f;
 
     [Header("Fur Ambient Occlusion")]
     public Color occlusionColor = new Color(0.15f, 0.12f, 0.10f, 1f);
@@ -92,6 +111,13 @@ public class FurShellRenderer : MonoBehaviour
     private static readonly int ForceLocalId = Shader.PropertyToID("_ForceLocal");
     private static readonly int OcclusionColorId = Shader.PropertyToID("_OcclusionColor");
     private static readonly int FresnelLVId = Shader.PropertyToID("_FresnelLV");
+    private static readonly int StrandSpecColor1Id = Shader.PropertyToID("_StrandSpecColor1");
+    private static readonly int StrandSpecColor2Id = Shader.PropertyToID("_StrandSpecColor2");
+    private static readonly int StrandSpecPower1Id = Shader.PropertyToID("_StrandSpecPower1");
+    private static readonly int StrandSpecPower2Id = Shader.PropertyToID("_StrandSpecPower2");
+    private static readonly int SpecShift1Id = Shader.PropertyToID("_SpecShift1");
+    private static readonly int SpecShift2Id = Shader.PropertyToID("_SpecShift2");
+    private static readonly int StrandSpecStrengthId = Shader.PropertyToID("_StrandSpecStrength");
 
     private MaterialPropertyBlock surfaceBlock;
     private MaterialPropertyBlock shellBlock;
@@ -119,8 +145,13 @@ public class FurShellRenderer : MonoBehaviour
         furThinness = Mathf.Max(0.01f, furThinness);
         furShading = Mathf.Clamp01(furShading);
         furDirLightExposure = Mathf.Clamp(furDirLightExposure, 0f, 5f);
-        lightFilter = Mathf.Clamp(lightFilter, -0.5f, 0.5f);
+        lightFilter = Mathf.Clamp(lightFilter, -1f, 1f);
         fresnelLV = Mathf.Clamp(fresnelLV, 0f, 5f);
+        strandSpecPower1 = Mathf.Clamp(strandSpecPower1, 1f, 256f);
+        strandSpecPower2 = Mathf.Clamp(strandSpecPower2, 1f, 256f);
+        specShift1 = Mathf.Clamp(specShift1, -1f, 1f);
+        specShift2 = Mathf.Clamp(specShift2, -1f, 1f);
+        strandSpecStrength = Mathf.Clamp(strandSpecStrength, 0f, 5f);
 
         EnsureRuntimeData();
 
@@ -243,6 +274,13 @@ public class FurShellRenderer : MonoBehaviour
         SetMaterialVectorIfExists(mat, ForceLocalId, forceLocal);
         SetMaterialColorIfExists(mat, OcclusionColorId, occlusionColor);
         SetMaterialFloatIfExists(mat, FresnelLVId, fresnelLV);
+        SetMaterialColorIfExists(mat, StrandSpecColor1Id, strandSpecColor1);
+        SetMaterialColorIfExists(mat, StrandSpecColor2Id, strandSpecColor2);
+        SetMaterialFloatIfExists(mat, StrandSpecPower1Id, strandSpecPower1);
+        SetMaterialFloatIfExists(mat, StrandSpecPower2Id, strandSpecPower2);
+        SetMaterialFloatIfExists(mat, SpecShift1Id, specShift1);
+        SetMaterialFloatIfExists(mat, SpecShift2Id, specShift2);
+        SetMaterialFloatIfExists(mat, StrandSpecStrengthId, strandSpecStrength);
 
         mat.renderQueue = renderQueue;
 
@@ -327,6 +365,13 @@ public class FurShellRenderer : MonoBehaviour
         block.SetVector(ForceLocalId, forceLocal);
         block.SetColor(OcclusionColorId, occlusionColor);
         block.SetFloat(FresnelLVId, fresnelLV);
+        block.SetColor(StrandSpecColor1Id, strandSpecColor1);
+        block.SetColor(StrandSpecColor2Id, strandSpecColor2);
+        block.SetFloat(StrandSpecPower1Id, strandSpecPower1);
+        block.SetFloat(StrandSpecPower2Id, strandSpecPower2);
+        block.SetFloat(SpecShift1Id, specShift1);
+        block.SetFloat(SpecShift2Id, specShift2);
+        block.SetFloat(StrandSpecStrengthId, strandSpecStrength);
     }
 
     private Bounds ComputeExpandedWorldBounds(Mesh mesh)

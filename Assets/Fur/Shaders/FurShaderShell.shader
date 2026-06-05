@@ -1,4 +1,4 @@
-Shader "Custom/FurShaderBaseInstance"
+Shader "Custom/FurShaderShell"
 {
     Properties
     {

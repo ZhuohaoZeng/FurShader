@@ -100,9 +100,10 @@ Material:
     - _DstBlendAlpha: 0
     - _EnvironmentReflections: 1
     - _FURSTEP: 0.05
-    - _FresnelLV: 1
+    - _FresnelLV: 3.79
     - _FurBase: 0
     - _FurDensity: 1
+    - _FurDirLightExposure: 1
     - _FurLength: 0.01
     - _FurShading: 0.05
     - _FurStep: 0
@@ -110,6 +111,7 @@ Material:
     - _GlossMapScale: 0
     - _Glossiness: 0
     - _GlossyReflections: 0
+    - _LightFilter: -0.036
     - _Metallic: 0
     - _OcclusionStrength: 1
     - _Parallax: 0.005
@@ -119,22 +121,29 @@ Material:
     - _Shininess: 15
     - _Smoothness: 0.5
     - _SmoothnessTextureChannel: 0
+    - _SpecShift1: 0.1
+    - _SpecShift2: -0.2
     - _SpecularHighlights: 1
     - _SrcBlend: 1
     - _SrcBlendAlpha: 1
+    - _StrandSpecPower1: 59.1
+    - _StrandSpecPower2: 22.9
+    - _StrandSpecStrength: 5
     - _Surface: 0
     - _WorkflowMode: 1
     - _ZWrite: 1
     m_Colors:
     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
-    - _Color: {r: 1, g: 0.9254902, b: 0.87058824, a: 1}
+    - _Color: {r: 0, g: 0, b: 0, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _ForceGlobal: {r: 0.3, g: 0, b: 0, a: 0}
     - _ForceLocal: {r: 0, g: -0.4, b: 0, a: 0}
-    - _OcclusionColor: {r: 0.78039217, g: 0.78039217, b: 0.78039217, a: 1}
+    - _OcclusionColor: {r: 0.3056603, g: 0.3056603, b: 0.3056603, a: 1}
     - _RimColor: {r: 0.6, g: 0.6, b: 0.6, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
-    - _Specular: {r: 0.47058824, g: 0.37254903, b: 0.29411766, a: 1}
+    - _Specular: {r: 0, g: 0, b: 0, a: 1}
+    - _StrandSpecColor1: {r: 1, g: 1, b: 1, a: 1}
+    - _StrandSpecColor2: {r: 1, g: 0.8509804, b: 0.6509804, a: 1}
   m_BuildTextureStacks: []
 --- !u!114 &7740852273637389503
 MonoBehaviour:

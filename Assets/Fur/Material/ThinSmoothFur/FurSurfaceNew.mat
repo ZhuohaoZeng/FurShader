@@ -7,16 +7,17 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: FurBaseInstanceMixedNoise
-  m_Shader: {fileID: 4800000, guid: 29730cf0778c2e346b125cddbc51410a, type: 3}
+  m_Name: FurSurface 1
+  m_Shader: {fileID: 4800000, guid: 998f08c3debd04249a6ff1be0522e126, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
-  m_InvalidKeywords: []
+  m_InvalidKeywords:
+  - _FUR_SURFACE
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 1
   m_DoubleSidedGI: 0
-  m_CustomRenderQueue: 3000
+  m_CustomRenderQueue: 2000
   stringTagMap: {}
   disabledShaderPasses: []
   m_LockedProperties: 
@@ -48,11 +49,11 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _FurTex:
-        m_Texture: {fileID: 2800000, guid: 2a055e20cde6b574c817dc39f98633d6, type: 3}
+        m_Texture: {fileID: 2800000, guid: 91f1dfbc4bdcf4dab8e1e11bbc9bed54, type: 3}
         m_Scale: {x: 5, y: 5}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
-        m_Texture: {fileID: 2800000, guid: a3390bf69b5e44aefbaa8626b10f94cc, type: 3}
+        m_Texture: {fileID: 2800000, guid: c4b7b4c600a8b8c4da1783672d9da507, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MetallicGlossMap:
@@ -60,7 +61,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _OcclusionMap:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: 3828d7e9f659d05409ecf20ca6a6ed94, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _ParallaxMap:
@@ -99,14 +100,13 @@ Material:
     - _DstBlend: 0
     - _DstBlendAlpha: 0
     - _EnvironmentReflections: 1
-    - _FURSTEP: 0.05
-    - _FresnelLV: 1
-    - _FurBase: 0
+    - _FURSTEP: 0
+    - _FurBase: 1
     - _FurDensity: 1
-    - _FurLength: 0.04
+    - _FurLength: 0.01
     - _FurShading: 0.05
     - _FurStep: 0
-    - _FurThinness: 2
+    - _FurThinness: 3.4
     - _GlossMapScale: 0
     - _Glossiness: 0
     - _GlossyReflections: 0
@@ -115,7 +115,6 @@ Material:
     - _Parallax: 0.005
     - _QueueOffset: 0
     - _ReceiveShadows: 1
-    - _RimPower: 4.485
     - _Shininess: 15
     - _Smoothness: 0.5
     - _SmoothnessTextureChannel: 0
@@ -129,12 +128,8 @@ Material:
     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
     - _Color: {r: 1, g: 0.9254902, b: 0.87058824, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
-    - _ForceGlobal: {r: 0.3, g: -0.5, b: 0, a: 0}
-    - _ForceLocal: {r: 0, g: -0.4, b: 0, a: 0}
-    - _OcclusionColor: {r: 0.15, g: 0.12, b: 0.1, a: 1}
-    - _RimColor: {r: 0.34117648, g: 0.31764707, b: 0.29803923, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
-    - _Specular: {r: 0.47058824, g: 0.37254903, b: 0.29411766, a: 1}
+    - _Specular: {r: 1, g: 1, b: 1, a: 1}
   m_BuildTextureStacks: []
 --- !u!114 &7740852273637389503
 MonoBehaviour:
