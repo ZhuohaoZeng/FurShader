@@ -8,7 +8,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: FurSurfaceMixedNoise
-  m_Shader: {fileID: 4800000, guid: 9601180a71087b644876673a0a7b69de, type: 3}
+  m_Shader: {fileID: 4800000, guid: ecdca99baa6d2774cad55b20974578ca, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -53,7 +53,7 @@ Material:
         m_Scale: {x: 5, y: 5}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
-        m_Texture: {fileID: 2800000, guid: ccc7e46107c73764b8d6d7c894bc3948, type: 3}
+        m_Texture: {fileID: 2800000, guid: a3390bf69b5e44aefbaa8626b10f94cc, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MetallicGlossMap:
@@ -61,7 +61,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _OcclusionMap:
-        m_Texture: {fileID: 2800000, guid: 3828d7e9f659d05409ecf20ca6a6ed94, type: 3}
+        m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _ParallaxMap:
@@ -102,11 +102,11 @@ Material:
     - _EnvironmentReflections: 1
     - _FURSTEP: 0
     - _FurBase: 1
-    - _FurDensity: 1
-    - _FurLength: 0.04
-    - _FurShading: 0.05
+    - _FurDensity: 1.42
+    - _FurLength: 0.17
+    - _FurShading: 0.13
     - _FurStep: 0
-    - _FurThinness: 2
+    - _FurThinness: 1.87
     - _GlossMapScale: 0
     - _Glossiness: 0
     - _GlossyReflections: 0

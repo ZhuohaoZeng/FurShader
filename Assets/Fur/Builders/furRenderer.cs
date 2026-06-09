@@ -6,7 +6,7 @@ using UnityEditor;
 #endif
 
 [ExecuteAlways]
-public class FurShellInstancedRenderer0604 : MonoBehaviour
+public class furRenderer : MonoBehaviour
 {
     [Header("Mesh Source")]
     public MeshRenderer sourceRenderer;
@@ -15,6 +15,19 @@ public class FurShellInstancedRenderer0604 : MonoBehaviour
     [Header("Materials")]
     public Material surfaceMaterial;
     public Material shellMaterial;
+
+    [Header("Textures")]
+    public Texture mainTexture;
+    public Vector2 mainTextureScale = Vector2.one;
+    public Vector2 mainTextureOffset = Vector2.zero;
+
+    [Tooltip("Fur pattern used by the shell shader.")]
+    public Texture noiseTexture;
+    public Vector2 noiseTextureScale = Vector2.one;
+    public Vector2 noiseTextureOffset = Vector2.zero;
+
+    [Tooltip("AO texture used only by the surface shader.")]
+    public Texture occlusionMap;
 
     [Header("Basic Settings")]
     public Color color = Color.white;
@@ -27,7 +40,9 @@ public class FurShellInstancedRenderer0604 : MonoBehaviour
     public float occlusionStrength = 1f;
     
     [Header("Rim Lighting")]
-    public Color rimColor = Color.black;
+    [Tooltip("控制毛发边缘光强度，数值越大，毛发轮廓处的环境边缘光越明显。")]
+    [Range(0.0f, 20.0f)]
+    public float fresnelLevel = 1.0f;
 
     [Header("Fur Settings")]
     [Range(1, 256)]
@@ -44,20 +59,12 @@ public class FurShellInstancedRenderer0604 : MonoBehaviour
 
     [Range(0.0f, 1f)]
     public float furShading = 0.25f;
-    [Header("Fur Ambient Occlusion")]
-    public Color occlusionColor = new Color(0.15f, 0.12f, 0.10f, 1f);
-
-    [Range(0f, 5f)]
-    public float fresnelLV = 1f;
 
     [Header("Force Settings")]
     public Vector3 forceGlobal = Vector3.zero;
     public Vector3 forceLocal = Vector3.zero;
 
     
-
-    [Range(0.0f, 8.0f)]
-    public float rimPower = 6.0f;
 
     [Header("Render Settings")]
     public int surfaceRenderQueue = (int)RenderQueue.Geometry;
@@ -82,15 +89,17 @@ public class FurShellInstancedRenderer0604 : MonoBehaviour
     private static readonly int FurThinnessId = Shader.PropertyToID("_FurThinness");
     private static readonly int FurShadingId = Shader.PropertyToID("_FurShading");
     private static readonly int ColorId = Shader.PropertyToID("_Color");
+    private static readonly int MainTexId = Shader.PropertyToID("_MainTex");
+    private static readonly int MainTexStId = Shader.PropertyToID("_MainTex_ST");
+    private static readonly int FurTexId = Shader.PropertyToID("_FurTex");
+    private static readonly int FurTexStId = Shader.PropertyToID("_FurTex_ST");
     private static readonly int SpecularId = Shader.PropertyToID("_Specular");
     private static readonly int ShininessId = Shader.PropertyToID("_Shininess");
+    private static readonly int OcclusionMapId = Shader.PropertyToID("_OcclusionMap");
     private static readonly int OcclusionStrengthId = Shader.PropertyToID("_OcclusionStrength");
     private static readonly int ForceGlobalId = Shader.PropertyToID("_ForceGlobal");
     private static readonly int ForceLocalId = Shader.PropertyToID("_ForceLocal");
-    private static readonly int RimColorId = Shader.PropertyToID("_RimColor");
-    private static readonly int RimPowerId = Shader.PropertyToID("_RimPower");
-    private static readonly int OcclusionColorId = Shader.PropertyToID("_OcclusionColor");
-    private static readonly int FresnelLVId = Shader.PropertyToID("_FresnelLV");
+    private static readonly int FresnelLevelId = Shader.PropertyToID("_FresnelLV");
 
     private MaterialPropertyBlock surfaceBlock;
     private MaterialPropertyBlock shellBlock;
@@ -117,7 +126,7 @@ public class FurShellInstancedRenderer0604 : MonoBehaviour
         shininess = Mathf.Max(0.01f, shininess);
         furThinness = Mathf.Max(0.01f, furThinness);
         furShading = Mathf.Clamp01(furShading);
-        rimPower = Mathf.Clamp(rimPower, 0.0f, 8.0f);
+        fresnelLevel = Mathf.Clamp(fresnelLevel, 0.0f, 20.0f);
 
         EnsureRuntimeData();
 
@@ -193,39 +202,40 @@ public class FurShellInstancedRenderer0604 : MonoBehaviour
     private void ConfigureMaterials()
     {
         if (surfaceMaterial != null)
-            ConfigureSurfaceMaterial(surfaceMaterial, surfaceRenderQueue);
+            ConfigureSurfaceMaterial(surfaceMaterial);
 
         if (shellMaterial != null)
         {
-            ConfigureShellMaterial(shellMaterial, shellRenderQueue);
+            ConfigureShellMaterial(shellMaterial);
             shellMaterial.enableInstancing = true;
         }
     }
 
-    private void ConfigureSurfaceMaterial(Material mat, int renderQueue)
+    private void ConfigureSurfaceMaterial(Material mat)
     {
-        if (mat == null)
-            return;
-
-        // Surface keeps its own AO settings from the Material inspector.
-        // Do NOT override _OcclusionStrength / _OcclusionColor / _FresnelLV here.
+        SetMaterialTextureIfExists(mat, MainTexId, mainTexture, Texture2D.whiteTexture);
+        SetMaterialTextureScaleAndOffsetIfExists(
+            mat, MainTexId, mainTextureScale, mainTextureOffset);
+        SetMaterialTextureIfExists(mat, OcclusionMapId, occlusionMap, Texture2D.whiteTexture);
         SetMaterialColorIfExists(mat, ColorId, color);
         SetMaterialColorIfExists(mat, SpecularId, specular);
         SetMaterialFloatIfExists(mat, ShininessId, shininess);
-
-        mat.renderQueue = renderQueue;
+        SetMaterialFloatIfExists(mat, OcclusionStrengthId, occlusionStrength);
+        mat.renderQueue = surfaceRenderQueue;
 
 #if UNITY_EDITOR
         EditorUtility.SetDirty(mat);
 #endif
     }
 
-    private void ConfigureShellMaterial(Material mat, int renderQueue)
+    private void ConfigureShellMaterial(Material mat)
     {
-        if (mat == null)
-            return;
-
-        // Shell/fur-only parameters.
+        SetMaterialTextureIfExists(mat, MainTexId, mainTexture, Texture2D.whiteTexture);
+        SetMaterialTextureScaleAndOffsetIfExists(
+            mat, MainTexId, mainTextureScale, mainTextureOffset);
+        SetMaterialTextureIfExists(mat, FurTexId, noiseTexture, Texture2D.whiteTexture);
+        SetMaterialTextureScaleAndOffsetIfExists(
+            mat, FurTexId, noiseTextureScale, noiseTextureOffset);
         SetMaterialFloatIfExists(mat, FurLayerCountId, shellCount);
         SetMaterialFloatIfExists(mat, FurLengthId, furLength);
         SetMaterialFloatIfExists(mat, FurDensityId, furDensity);
@@ -236,12 +246,8 @@ public class FurShellInstancedRenderer0604 : MonoBehaviour
         SetMaterialFloatIfExists(mat, ShininessId, shininess);
         SetMaterialVectorIfExists(mat, ForceGlobalId, forceGlobal);
         SetMaterialVectorIfExists(mat, ForceLocalId, forceLocal);
-        SetMaterialColorIfExists(mat, RimColorId, rimColor);
-        SetMaterialFloatIfExists(mat, RimPowerId, rimPower);
-        SetMaterialColorIfExists(mat, OcclusionColorId, occlusionColor);
-        SetMaterialFloatIfExists(mat, FresnelLVId, fresnelLV);
-
-        mat.renderQueue = renderQueue;
+        SetMaterialFloatIfExists(mat, FresnelLevelId, fresnelLevel);
+        mat.renderQueue = shellRenderQueue;
 
 #if UNITY_EDITOR
         EditorUtility.SetDirty(mat);
@@ -301,15 +307,23 @@ public class FurShellInstancedRenderer0604 : MonoBehaviour
 
     private void WriteSurfaceProperties(MaterialPropertyBlock block)
     {
-        // Surface uses its own/default occlusion settings from the material.
-        // Do not set _OcclusionStrength, _OcclusionColor, or _FresnelLV here.
+        block.SetTexture(MainTexId, mainTexture != null ? mainTexture : Texture2D.whiteTexture);
+        block.SetVector(MainTexStId, TextureTransform(mainTextureScale, mainTextureOffset));
+        block.SetTexture(
+            OcclusionMapId,
+            occlusionMap != null ? occlusionMap : Texture2D.whiteTexture);
         block.SetColor(ColorId, color);
         block.SetColor(SpecularId, specular);
         block.SetFloat(ShininessId, shininess);
+        block.SetFloat(OcclusionStrengthId, occlusionStrength);
     }
 
     private void WriteShellProperties(MaterialPropertyBlock block)
     {
+        block.SetTexture(MainTexId, mainTexture != null ? mainTexture : Texture2D.whiteTexture);
+        block.SetVector(MainTexStId, TextureTransform(mainTextureScale, mainTextureOffset));
+        block.SetTexture(FurTexId, noiseTexture != null ? noiseTexture : Texture2D.whiteTexture);
+        block.SetVector(FurTexStId, TextureTransform(noiseTextureScale, noiseTextureOffset));
         block.SetFloat(FurLayerCountId, shellCount);
         block.SetFloat(FurLengthId, furLength);
         block.SetFloat(FurDensityId, furDensity);
@@ -320,10 +334,7 @@ public class FurShellInstancedRenderer0604 : MonoBehaviour
         block.SetFloat(ShininessId, shininess);
         block.SetVector(ForceGlobalId, forceGlobal);
         block.SetVector(ForceLocalId, forceLocal);
-        block.SetColor(RimColorId, rimColor);
-        block.SetFloat(RimPowerId, rimPower);
-        block.SetColor(OcclusionColorId, occlusionColor);
-        block.SetFloat(FresnelLVId, fresnelLV);
+        block.SetFloat(FresnelLevelId, fresnelLevel);
     }
 
     private Bounds ComputeExpandedWorldBounds(Mesh mesh)
@@ -351,6 +362,34 @@ public class FurShellInstancedRenderer0604 : MonoBehaviour
         extents.z = Mathf.Abs(axisX.z) + Mathf.Abs(axisY.z) + Mathf.Abs(axisZ.z);
 
         return new Bounds(center, extents * 2f);
+    }
+
+    private static Vector4 TextureTransform(Vector2 scale, Vector2 offset)
+    {
+        return new Vector4(scale.x, scale.y, offset.x, offset.y);
+    }
+
+    private static void SetMaterialTextureIfExists(
+        Material mat,
+        int propertyId,
+        Texture texture,
+        Texture fallback)
+    {
+        if (mat.HasProperty(propertyId))
+            mat.SetTexture(propertyId, texture != null ? texture : fallback);
+    }
+
+    private static void SetMaterialTextureScaleAndOffsetIfExists(
+        Material mat,
+        int propertyId,
+        Vector2 scale,
+        Vector2 offset)
+    {
+        if (!mat.HasProperty(propertyId))
+            return;
+
+        mat.SetTextureScale(propertyId, scale);
+        mat.SetTextureOffset(propertyId, offset);
     }
 
     private static void SetMaterialFloatIfExists(Material mat, int propertyId, float value)

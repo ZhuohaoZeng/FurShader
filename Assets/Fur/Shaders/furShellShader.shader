@@ -1,4 +1,4 @@
-Shader "Custom/FurShaderBaseInstance0604"
+Shader "Custom/FurShaderBaseInstance<-----This is the one in the Final Scene from last Friday"
 {
     Properties
     {
@@ -10,8 +10,6 @@ Shader "Custom/FurShaderBaseInstance0604"
 
         [NoScaleOffset] _OcclusionMap ("AO Map", 2D) = "white" {}
         _OcclusionStrength ("AO Strength", Range(0, 1)) = 1
-        _OcclusionColor ("AO Color", Color) = (0, 0, 0, 1)
-        _FresnelLV ("Fresnel Level", Range(0, 5)) = 1
         
         _FurTex("Fur Pattern", 2D) = "white" {}
         //_FurStep("FURSTEP", Range(0.0, 1)) = 0
@@ -24,8 +22,7 @@ Shader "Custom/FurShaderBaseInstance0604"
         _ForceGlobal ("Force Global", Vector) = (0, 0, 0, 0)
         _ForceLocal ("Force Local", Vector) = (0, 0, 0, 0)
 
-        _RimColor ("Rim Color", Color) = (0, 0, 0, 1)
-        _RimPower ("Rim Power", Range(0.0, 8.0)) = 6.0
+        _FresnelLV ("Fresnel Level", Range(0, 20)) = 1
     }
     SubShader
     {
@@ -60,9 +57,6 @@ Shader "Custom/FurShaderBaseInstance0604"
                 float4 _Specular;
                 float _Shininess;
                 float _OcclusionStrength;
-                float4 _OcclusionColor;
-                float _FresnelLV;
-                
 
                 float4 _FurTex_ST;
                 float _FurLayerCount;
@@ -74,8 +68,7 @@ Shader "Custom/FurShaderBaseInstance0604"
                 float4 _ForceGlobal;
                 float4 _ForceLocal;
 
-                float4 _RimColor;
-                float _RimPower;
+                float _FresnelLV;
             CBUFFER_END
 
             struct VertexData 
@@ -128,28 +121,28 @@ Shader "Custom/FurShaderBaseInstance0604"
                 half3 halfWS = normalize(viewWS + lightWS);
                 
                 half3 albedo = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, i.uv.xy).rgb * _Color.rgb;
-                // albedo -= (pow(1 - i.furStep, 3)) * _FurShading;
-                // float rim = 1.0 - saturate(dot(viewWS, normalWS));
-                // albedo += half4(_RimColor.rgb * pow(rim, _RimPower), 1.0);
+                albedo -= (pow(1 - i.furStep, 3)) * _FurShading;
 
-                // half rawAO = SAMPLE_TEXTURE2D(_OcclusionMap, sampler_OcclusionMap, i.uv.xy).r;
-                // half ao = lerp(1.0, rawAO, _OcclusionStrength);
-                // Ignoring The texture for fast iteration, COME BACK TO THIS LATER
+                half rawAO = SAMPLE_TEXTURE2D(_OcclusionMap, sampler_OcclusionMap, i.uv.xy).r;
+                half ao = lerp(1.0, rawAO, _OcclusionStrength);
+
+                half3 ambient = SampleSH(normalWS) * albedo * ao;
+
                 half normalAO = saturate(normalVS.y * 0.25 + 0.35);
-                half3 SH = normalAO.xxx;
-                half occlusion = i.furStep * i.furStep + 0.04;
-                occlusion = saturate(occlusion);
-                half3 SHL = lerp(_OcclusionColor.rgb * SH, SH, occlusion);
+                half3 rimSH = normalAO.xxx;
+                half furAccess = saturate(i.furStep * i.furStep + 0.04);
+                half fresnel = 1.0 - max(0.0, dot(normalWS, viewWS));
+                half rimLight = fresnel * furAccess;
+                rimLight *= rimLight;
+                ambient += rimLight * _FresnelLV * rimSH * albedo;
 
-                half3 ambient = SHL * albedo;
                 half3 diffuse = mainLight.color * albedo * saturate(dot(normalWS, lightWS));
                 half3 specular = mainLight.color * _Specular.rgb * pow(saturate(dot(normalWS, halfWS)), _Shininess);
 
-                half3 color = ambient + diffuse + specular;//
-                half3 noiseCombine = SAMPLE_TEXTURE2D(_FurTex, sampler_FurTex, i.uv.zw * _FurThinness).rgb;
-                half mixedNoise =  noiseCombine.g * 0.9 + noiseCombine.b * 0.8;
-                half alpha = saturate(mixedNoise - (i.furStep * i.furStep) * _FurDensity);
-                return half4(ambient, alpha);  
+                half3 color = ambient + diffuse + specular;
+                half noise = SAMPLE_TEXTURE2D(_FurTex, sampler_FurTex, i.uv.zw * _FurThinness).r;
+                half alpha = saturate(noise - (i.furStep * i.furStep) * _FurDensity);
+                return half4(color, alpha);  
                 }
             ENDHLSL
         }
